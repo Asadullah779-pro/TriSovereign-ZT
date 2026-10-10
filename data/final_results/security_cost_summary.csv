@@ -1,0 +1,4 @@
+component,mean_ms,median_ms,stdev_ms,p95_ms
+Core lineage validation,0.364682,0.328200,0.105780,0.565580
+Audit logging,0.792113,0.731600,0.210574,1.143580
+Full gateway authorization,1.226473,1.142100,0.575537,1.609790

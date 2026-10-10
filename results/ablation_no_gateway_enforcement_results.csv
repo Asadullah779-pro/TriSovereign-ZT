@@ -1,0 +1,6 @@
+case_type,case_name,full_allowed,full_reason,ablation_allowed,ablation_reason
+ATTACK,Unauthorized robot zone,False,ROBOT_ZONE_NOT_ALLOWED,True,ROBOT_MOVED
+CAPABILITY_CONTROL,Unauthorized robot action,False,ROBOT_ACTION_NOT_ALLOWED,False,ROBOT_COMMAND_NOT_IMPLEMENTED
+ATTACK,Expired capsule execution,False,CAPSULE_EXPIRED_OR_NOT_YET_VALID,True,ROBOT_MOVED
+ATTACK,Revoked task execution,False,TASK_NOT_ACTIVE,True,ROBOT_MOVED
+CONTROL,Legitimate robot execution,True,ROBOT_MOVED,True,ROBOT_MOVED

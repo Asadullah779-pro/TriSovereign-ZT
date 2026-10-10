@@ -1,0 +1,12 @@
+experiment,x_value,mean,median,stdev,throughput,throughput_stdev
+workload,100,1.347907,1.340679,0.188783,755.40,107.84
+workload,500,1.180281,1.155636,0.116118,854.19,78.63
+workload,1000,1.216799,1.188994,0.116772,828.10,72.91
+workload,5000,1.215008,1.220370,0.044283,824.02,30.03
+workload,10000,1.159201,1.215188,0.136627,875.92,125.39
+delegation_depth,1,0.264168,,,,
+delegation_depth,2,0.386948,,,,
+delegation_depth,5,0.769066,,,,
+delegation_depth,10,1.454420,,,,
+delegation_depth,20,2.632809,,,,
+delegation_depth,50,6.535437,,,,

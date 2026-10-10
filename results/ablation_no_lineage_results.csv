@@ -1,0 +1,6 @@
+case_type,case_name,full_allowed,full_reason,ablation_allowed,ablation_reason
+ATTACK,Tampered root ancestor,False,LINEAGE_INVALID_SIGNATURE,True,ABLATION_NO_LINEAGE_ALLOWED
+ATTACK,Untrusted root capsule,False,UNTRUSTED_ROOT_CAPSULE,True,ABLATION_NO_LINEAGE_ALLOWED
+ATTACK,Untrusted root principal,False,UNTRUSTED_ROOT_PRINCIPAL,True,ABLATION_NO_LINEAGE_ALLOWED
+ATTACK,Missing ancestor,False,LINEAGE_PARENT_NOT_FOUND,True,ABLATION_NO_LINEAGE_ALLOWED
+CONTROL,Legitimate lineage,True,DELEGATION_PROPOSAL_ALLOWED,True,ABLATION_NO_LINEAGE_ALLOWED

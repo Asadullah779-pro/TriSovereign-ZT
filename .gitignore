@@ -1,0 +1,36 @@
+# Python virtual environment
+venv/
+.venv/
+
+# Python cache files
+__pycache__/
+*.py[cod]
+
+# PyCharm / JetBrains project files
+.idea/
+
+# Runtime logs
+logs/
+*.log
+
+# Environment variables and local secrets
+.env
+.env.*
+*.key
+*.pem
+
+# Operating-system files
+.DS_Store
+Thumbs.db
+
+# Test/tool caches
+.pytest_cache/
+.mypy_cache/
+.coverage
+
+# Temporary files
+*.tmp
+*.bak
+
+# Private research notes
+RESEARCH_RESULTS_MASTER.txt

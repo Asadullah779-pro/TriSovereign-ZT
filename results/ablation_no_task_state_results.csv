@@ -1,0 +1,5 @@
+case_type,case_name,full_allowed,full_reason,ablation_allowed,ablation_reason
+ATTACK,Revoked task,False,TASK_NOT_ACTIVE,True,ABLATION_NO_TASK_STATE_ALLOWED
+ATTACK,Stale parent version,False,STALE_PARENT_VERSION,True,ABLATION_NO_TASK_STATE_ALLOWED
+ATTACK,Stale child version,False,STALE_CHILD_VERSION,True,ABLATION_NO_TASK_STATE_ALLOWED
+CONTROL,Legitimate task state,True,DELEGATION_PROPOSAL_ALLOWED,True,ABLATION_NO_TASK_STATE_ALLOWED
