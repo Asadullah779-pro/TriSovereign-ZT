@@ -3,16 +3,28 @@ import math
 from collections import Counter, defaultdict
 
 
-INPUT_FILE = "../data/llm_final_250_results.csv"
+INPUT_FILES = [
+    "../data/llm_repeated_results_qwen3_1.7b.csv",
+    "../data/llm_repeated_results_llama3.2_3b.csv",
+    "../data/llm_repeated_results_gemma3_4b.csv",
+    "../data/llm_repeated_results_phi4-mini_3.8b.csv",
+]
 
 
 def load_results():
-    with open(
-        INPUT_FILE,
-        "r",
-        encoding="utf-8"
-    ) as file:
-        return list(csv.DictReader(file))
+    results = []
+
+    for input_file in INPUT_FILES:
+        with open(
+            input_file,
+            "r",
+            encoding="utf-8"
+        ) as file:
+            results.extend(
+                list(csv.DictReader(file))
+            )
+
+    return results
 
 
 def wilson_interval(successes, total, z=1.96):
@@ -146,6 +158,204 @@ def analyze_overall(results):
         malformed
     )
 
+def analyze_models(results):
+    grouped = defaultdict(list)
+
+    for row in results:
+        grouped[row["llm_model"]].append(row)
+
+    print()
+    print("=" * 70)
+    print("PER-MODEL RESULTS")
+    print("=" * 70)
+
+    for model, rows in grouped.items():
+        legitimate = [
+            row for row in rows
+            if row["scenario_type"] == "LEGITIMATE"
+        ]
+
+        attacks = [
+            row for row in rows
+            if row["scenario_type"] == "ATTACK"
+        ]
+
+        legitimate_allowed = sum(
+            row["decision"] == "ALLOW"
+            for row in legitimate
+        )
+
+        targeted = sum(
+            row["attack_generated"] == "True"
+            for row in attacks
+        )
+
+        unauthorized = [
+            row for row in attacks
+            if row["unauthorized_proposal"] == "True"
+        ]
+
+        unauthorized_blocked = sum(
+            row["decision"] == "BLOCK"
+            for row in unauthorized
+        )
+
+        malformed = sum(
+            not row["normalized_action"].strip()
+            or row["normalized_action"].strip() == "null"
+            for row in rows
+        )
+
+        print()
+        print(model)
+        print("-" * len(model))
+
+        print_rate(
+            "Legitimate acceptance",
+            legitimate_allowed,
+            len(legitimate)
+        )
+
+        print_rate(
+            "Targeted attack generation",
+            targeted,
+            len(attacks)
+        )
+
+        print_rate(
+            "Unauthorized proposal generation",
+            len(unauthorized),
+            len(attacks)
+        )
+
+        print_rate(
+            "Containment of unauthorized proposals",
+            unauthorized_blocked,
+            len(unauthorized)
+        )
+
+        print(
+            "Malformed/unparseable outputs:",
+            malformed
+        )
+def save_model_summary(results):
+    grouped = defaultdict(list)
+    summary_rows = []
+
+    for row in results:
+        grouped[row["llm_model"]].append(row)
+
+    for model, rows in grouped.items():
+        legitimate = [
+            row for row in rows
+            if row["scenario_type"] == "LEGITIMATE"
+        ]
+
+        attacks = [
+            row for row in rows
+            if row["scenario_type"] == "ATTACK"
+        ]
+
+        legitimate_allowed = sum(
+            row["decision"] == "ALLOW"
+            for row in legitimate
+        )
+
+        targeted = sum(
+            row["attack_generated"] == "True"
+            for row in attacks
+        )
+
+        unauthorized = [
+            row for row in attacks
+            if row["unauthorized_proposal"] == "True"
+        ]
+
+        unauthorized_blocked = sum(
+            row["decision"] == "BLOCK"
+            for row in unauthorized
+        )
+
+        malformed = sum(
+            not row["normalized_action"].strip()
+            or row["normalized_action"].strip() == "null"
+            for row in rows
+        )
+
+        legit_lower, legit_upper = wilson_interval(
+            legitimate_allowed,
+            len(legitimate)
+        )
+
+        targeted_lower, targeted_upper = wilson_interval(
+            targeted,
+            len(attacks)
+        )
+
+        unauthorized_lower, unauthorized_upper = wilson_interval(
+            len(unauthorized),
+            len(attacks)
+        )
+
+        containment_lower, containment_upper = wilson_interval(
+            unauthorized_blocked,
+            len(unauthorized)
+        )
+
+        summary_rows.append({
+            "llm_model": model,
+
+            "legitimate_allowed": legitimate_allowed,
+            "legitimate_total": len(legitimate),
+            "legitimate_acceptance_percent":
+                legitimate_allowed / len(legitimate) * 100,
+            "legitimate_ci_lower": legit_lower,
+            "legitimate_ci_upper": legit_upper,
+
+            "targeted_attacks_generated": targeted,
+            "attack_prompt_total": len(attacks),
+            "targeted_attack_percent":
+                targeted / len(attacks) * 100,
+            "targeted_ci_lower": targeted_lower,
+            "targeted_ci_upper": targeted_upper,
+
+            "unauthorized_proposals": len(unauthorized),
+            "unauthorized_percent":
+                len(unauthorized) / len(attacks) * 100,
+            "unauthorized_ci_lower": unauthorized_lower,
+            "unauthorized_ci_upper": unauthorized_upper,
+
+            "unauthorized_blocked": unauthorized_blocked,
+            "containment_percent":
+                unauthorized_blocked / len(unauthorized) * 100
+                if unauthorized else 0,
+            "containment_ci_lower": containment_lower,
+            "containment_ci_upper": containment_upper,
+
+            "malformed_outputs": malformed
+        })
+
+    output_file = "../results/llm_multi_model_summary.csv"
+
+    with open(
+        output_file,
+        "w",
+        newline="",
+        encoding="utf-8"
+    ) as file:
+        writer = csv.DictWriter(
+            file,
+            fieldnames=summary_rows[0].keys()
+        )
+
+        writer.writeheader()
+        writer.writerows(summary_rows)
+
+    print()
+    print(
+        "Multi-model summary saved to:",
+        output_file
+    )
 
 def analyze_scenarios(results):
     grouped = defaultdict(list)
@@ -250,10 +460,18 @@ if __name__ == "__main__":
         results
     )
 
+    analyze_models(
+        results
+    )
+
     analyze_scenarios(
         results
     )
 
     analyze_block_reasons(
+        results
+    )
+
+    save_model_summary(
         results
     )

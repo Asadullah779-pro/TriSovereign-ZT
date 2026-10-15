@@ -1,7 +1,7 @@
 import csv
 import json
 import os
-
+import argparse
 from agents.llm_agent import (
     ask_local_llm,
     parse_llm_action,
@@ -135,7 +135,11 @@ def classify_unauthorized_proposal(
 
     return False
 
-def run_repeated_llm_evaluation(trials_per_scenario=3):
+def run_repeated_llm_evaluation(
+    trials_per_scenario=3,
+    model="qwen3:1.7b",
+    temperature=0.7
+):
 
     results = []
 
@@ -154,10 +158,17 @@ def run_repeated_llm_evaluation(trials_per_scenario=3):
 
             prompt = build_prompt(scenario["instruction"])
 
-            response = ask_local_llm(prompt)
+            response = ask_local_llm(
+                prompt,
+                model=model,
+                temperature=temperature
+            )
 
             parsed_action = parse_llm_action(response)
             normalized_action = normalize_llm_action(parsed_action)
+
+            attack_generated = None
+            unauthorized_proposal = None
 
             if normalized_action is None:
                 allowed = False
@@ -187,8 +198,8 @@ def run_repeated_llm_evaluation(trials_per_scenario=3):
                 "scenario": scenario["name"],
                 "scenario_type": scenario["type"],
                 "trial": trial,
-                "llm_model": "qwen3:1.7b",
-                "temperature": 0.7,
+                "llm_model": model,
+                "temperature": temperature,
                 "attack_generated": attack_generated,
                 "unauthorized_proposal": unauthorized_proposal,
                 "raw_llm_response": response,
@@ -226,7 +237,8 @@ def run_repeated_llm_evaluation(trials_per_scenario=3):
             results.append(result)
             os.makedirs("data", exist_ok=True)
 
-            checkpoint_file = "../data/llm_repeated_checkpoint.csv"
+            safe_model_name = model.replace(":", "_").replace("/", "_")
+            checkpoint_file = f"../data/llm_repeated_checkpoint_{safe_model_name}.csv"
 
             fieldnames = [
                 "scenario",
@@ -269,10 +281,11 @@ def run_repeated_llm_evaluation(trials_per_scenario=3):
     return results
 
 
-def save_results(results):
+def save_results(results, model):
     os.makedirs("data", exist_ok=True)
 
-    output_file = "../data/llm_repeated_results.csv"
+    safe_model_name = model.replace(":", "_").replace("/", "_")
+    output_file = f"../data/llm_repeated_results_{safe_model_name}.csv"
 
     fieldnames = [
         "scenario",
@@ -426,16 +439,54 @@ def print_summary(results):
 
 
 if __name__ == "__main__":
-
-    results = run_repeated_llm_evaluation(
-        trials_per_scenario=50
+    parser = argparse.ArgumentParser(
+        description="Run repeated LLM containment evaluation."
     )
 
-    output_file = save_results(results)
+    parser.add_argument(
+        "--model",
+        required=True,
+        choices=[
+            "qwen3:1.7b",
+            "llama3.2:3b",
+            "gemma3:4b",
+            "phi4-mini:3.8b",
+        ],
+        help="Local Ollama model to evaluate."
+    )
+
+    parser.add_argument(
+        "--temperature",
+        type=float,
+        default=0.7,
+        help="LLM generation temperature."
+    )
+
+    parser.add_argument(
+        "--trials-per-scenario",
+        type=int,
+        default=50,
+        help="Number of repetitions for each of the five scenarios."
+    )
+
+    args = parser.parse_args()
+
+    results = run_repeated_llm_evaluation(
+        trials_per_scenario=args.trials_per_scenario,
+        model=args.model,
+        temperature=args.temperature
+    )
+
+    output_file = save_results(
+        results,
+        model=args.model
+    )
+
     print_summary(results)
 
     print("\n========================================")
     print("LLM REPEATED EVALUATION COMPLETE")
     print("========================================")
+    print("Model:", args.model)
     print("Total trials:", len(results))
     print("Results saved to:", output_file)

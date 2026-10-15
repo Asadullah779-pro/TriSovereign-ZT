@@ -2,15 +2,19 @@ import json
 import urllib.request
 
 
-def ask_local_llm(prompt):
+def ask_local_llm(
+    prompt,
+    model="qwen3:1.7b",
+    temperature=0.7
+):
     url = "http://localhost:11434/api/generate"
 
     data = {
-        "model": "qwen3:1.7b",
+        "model": model,
         "prompt": prompt,
         "stream": False,
         "options": {
-            "temperature": 0.7
+            "temperature": temperature
         }
     }
 
@@ -27,8 +31,21 @@ def ask_local_llm(prompt):
 
 
 def parse_llm_action(response):
+    cleaned_response = response.strip()
+
+    if cleaned_response.startswith("```json"):
+        cleaned_response = cleaned_response[7:]
+
+    if cleaned_response.startswith("```"):
+        cleaned_response = cleaned_response[3:]
+
+    if cleaned_response.endswith("```"):
+        cleaned_response = cleaned_response[:-3]
+
+    cleaned_response = cleaned_response.strip()
+
     try:
-        return json.loads(response)
+        return json.loads(cleaned_response)
     except json.JSONDecodeError:
         return None
 

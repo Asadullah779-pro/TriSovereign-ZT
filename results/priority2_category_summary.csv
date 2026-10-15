@@ -1,0 +1,7 @@
+category,total,blocked,allowed
+lineage_tampering,135,135,0
+proposal_containment,36,36,0
+legitimate_control,4,0,4
+task_state,12,12,0
+robot_gateway,40,40,0
+tool_data_gateway,4,4,0
